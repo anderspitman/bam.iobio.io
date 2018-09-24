@@ -233,12 +233,17 @@ export default {
       },
 
       update: function() {
+        console.log("update");
         this.updateAxisTicks();
         this.readDepthChart.width(this.width);
+        const startTime = timeNowSeconds();
         this.draw();
+        const endTime = timeNowSeconds();
+        console.log(`Draw time: ${endTime - startTime}`);
       },
 
       dataUpdate: function(){
+        console.log("dataUpdate");
         d3.select('#depth-distribution .chart').datum(this.data);
         this.getBounds();
         this.update();
@@ -247,29 +252,37 @@ export default {
     },
     watch: {
       data: function() {
+        console.log("data");
         this.dataUpdate();
       },
       drawChart: function() {
+        console.log("drawChart");
         this.dataUpdate();
-        this.update();
+        //this.update();
       },
       selectedSeqId: function() {
+        console.log("selectedSeqId");
         this.calcMaxZoom();
         this.dataUpdate();
       },
       width: function() {
+        console.log("width");
         this.update();
       },
       limitYAxes: function() {
+        console.log("limitYAxes");
         this.update();
       },
       numberIntervalsToZoom: function() {
+        console.log("numberIntervalsToZoom");
         this.dataUpdate();
       },
       medianDepth: function() {
+        console.log("medianDepth");
         this.update();
       },
       conversionRatio: function() {
+        console.log("conversionRatio");
         this.calcMaxZoom();
         this.dataUpdate();
       },
@@ -332,5 +345,8 @@ function isNumeric(n) {
 }
 
 
+function timeNowSeconds() {
+  return performance.now() / 1000;
+}
 </script>
 

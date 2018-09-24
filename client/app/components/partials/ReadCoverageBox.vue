@@ -14,6 +14,7 @@
     width: 65%;
   }
 
+  /*
   .panel#depth-distribution .chart {
     -webkit-flex: 1 1 auto;
     flex: 1 1 auto;
@@ -22,6 +23,7 @@
     margin-left: 0px;
     margin-right: 0px;
   }
+  */
 
   .hint {
     height: 14px;
@@ -76,6 +78,7 @@
     cursor: pointer;
   }
 
+  /*
   .chart rect {
     fill: #2d8fc1;
     shape-rendering: crispEdges;
@@ -88,6 +91,7 @@
   .chart text {
     fill: 'black';
   }
+  */
 
   .vue-slider-component .vue-slider {
     background-color: #2687BE;
@@ -141,12 +145,21 @@
 
     </div>
 
+    <!--
     <div id="readDepthLoadingMsg" style="font-size:50px;margin-top:30px;color:#2687BE">Initializing data <img style="height:18px" src="../../../images/loading_dots.gif"/></div>
+    -->
     <div v-if="notEnoughData" class="warning">Bam file is too small to read coverage information</div>
     <div v-if="tooManyRefs" class="warning">Too many references to display. Use the dropdown to the left to select the reference</div>
 
+    <!--
     <div class='chart' style="width:100%; height:60%"></div>
+    -->
 
+    <ReadDepthChart
+      :references='references'
+      :allPoints='chartData'>
+    </ReadDepthChart>
+    <!--
     <read-coverage-plot @setSelectedSeq="setSelectedSeq"
                         @setMaxZoomValue="updateMaxZoomValue"
                         @setUseMedianAsZoomInterval="setUseMedianAsZoomInterval"
@@ -157,6 +170,7 @@
                         :data="readDepthData"
                         :conversionRatio="conversionRatio"
                         :brushRange="brushRange"></read-coverage-plot>
+                      -->
   </div>
 </template>
 
@@ -165,12 +179,14 @@
 import HelpButton from "./HelpButton.vue";
 import ReadCoveragePlot from "../viz/ReadCoveragePlot.vue";
 import vueSlider from 'vue-slider-component';
+import ReadDepthChart from '../ReadDepthChart.vue';
 
 
 export default {
   components: {
     vueSlider,
     ReadCoveragePlot,
+    ReadDepthChart,
     HelpButton
   },
   name: 'read-coverage-box',
@@ -184,7 +200,10 @@ export default {
       type: Number,
       default: 0
     },
-    brushRange: {}
+    brushRange: {},
+
+    chartData: {},
+    references: {},
   },
   data() {
     return {
@@ -264,7 +283,18 @@ export default {
       const allSelected = this.selectedSeqId === 'all';
       return allSelected && this.readDepthData.length > 50;
     },
-  }
+
+    //references: function() {
+    //  console.log("here tis");
+    //  console.log(this.readDepthData);
+    //  return this.readDepthData.map((chr) => {
+    //    return {
+    //      id: chr.name,
+    //      length: chr.sqLength,
+    //    }
+    //  })
+    //},
+  },
 }
 
 </script>

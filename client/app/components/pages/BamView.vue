@@ -179,6 +179,7 @@
     animation:         nprogress-spinner 400ms linear infinite;
   }
 
+  /*
   .chart rect {
     fill: #2d8fc1;
     shape-rendering: crispEdges;
@@ -191,6 +192,7 @@
   .chart text {
     fill: 'black';
   }
+  */
 
   .iobio-multi-line.line-panel text { fill: black; }
   .iobio-multi-line.button-panel text { fill: white; }
@@ -282,6 +284,7 @@
 
     <section id="top">
 
+      <!--
       <div id="piechooser" class="panel" style="padding-top: 12px">
         <pie-chooser @setSelectedSeq="setSelectedSeq"
                      :selected-item="selectedSeqId"
@@ -290,6 +293,7 @@
           <option value="all">all</option>
         </select>
       </div>
+      -->
 
       <read-coverage-box @removeBedFile="removeBedFile"
                          @processBedFile="openBedFile"
@@ -298,6 +302,8 @@
                          :selectedSeqId="selectedSeqId"
                          :draw="draw"
                          :readDepthData="readDepthData"
+                         :chartData="chartData"
+                         :references="references"
                          :conversionRatio="readDepthConversionRatio"
                          :brushRange="coverageBrushRange"
                          v-tooltip.top-center="{content: clinTooltip.genome_wide_coverage.content, show: clinTooltip.genome_wide_coverage.show, trigger: 'manual'}">
@@ -579,6 +585,8 @@
   import PercentChartBox from "../partials/PercentChartBox.vue";
   import StackedHistogram from "../viz/StackedHistogram.vue";
 
+  import Vue from 'vue';
+
   export default {
     name: 'bam-view',
 
@@ -633,6 +641,11 @@
 
         bam: {},
         bed: {},
+
+        chartData: [],
+        allChartData: [],
+        references: [],
+        renderPromise: Promise.resolve(),
 
         readDepthData: [],
         selectedSeqId: 'all',
@@ -1045,8 +1058,127 @@
         $("#selectData").css("display", "none");
         $("#showData").css("visibility", "visible");
 
+        let refIndex = 0;
+
+        this.bam.getHeader().then((header) => {
+          this.references = header.sq.map((sq) => {
+            return {
+              id: sq.name,
+              length: sq.end,
+            };
+          });
+        });
+
+        const renderQueue = [];
+        let executing = false;
+
+        const createRenderCommand = (index, data) => {
+          const renderCommand = () => {
+            executing = true;
+            console.log("kick off", index);
+            Vue.set(this.chartData, index, data.slice(0, 1));
+            Vue.nextTick(() => {
+
+              Vue.set(this.chartData, index, data);
+              Vue.nextTick(() => {
+                console.log("after nexttick", index);
+                setTimeout(() => {
+                  const nextCommand = renderQueue.shift();
+
+                  if (nextCommand) {
+                      nextCommand();
+                  }
+                  else {
+                    console.log("render queue empty");
+                    executing = false;
+                  }
+                }, 0)
+              });
+            });
+          };
+
+          return renderCommand;
+        };
+
         // get read depth
-        this.bam.estimateBaiReadDepth(function doneCallback() {
+        this.bam.estimateBaiReadDepth((name, index, ref) => {
+            //if (refIndex > 2) {
+            //  return;
+            //}
+            //refIndex++;
+
+            //console.log(name, index, ref.depths.length, filterRef(name));
+            if (ref.depths.length > 0 && !filterRef(name)) {
+              const data = {
+                name,
+                data: ref.depths,
+                sqLength: ref.sqLength,
+              };
+              //Vue.set(this.readDepthData, index, data);
+              if (index < 28) {
+
+                // TODO: for some forsaken reason this downsampling needs to
+                // be done here. I've tried everything I can think of to
+                // encapsulate it into ReadDepthChart but it's always
+                // extremely laggy. I have no idea what's going on. Might have
+                // something to do with Vue trying to do everything at once.
+                const numSamples = 100;
+                let sampleStep = Math.floor(ref.depths.length / numSamples);
+                if (sampleStep < 1) {
+                  sampleStep = 1;
+                }
+
+                const points = [];
+                for (let i = 0; i < ref.depths.length; i += sampleStep) {
+                  points.push(ref.depths[i]);
+                }
+
+                const startTime = timeNowSeconds();
+                //Vue.set(this.chartData, index, ref.depths);
+                Vue.set(this.chartData, index, Object.freeze(ref.depths));
+                console.log("Set time: " + (timeNowSeconds() - startTime));
+
+
+                //console.log("got somefin", index);
+                //const command = createRenderCommand(index, ref.depths);
+                //if (!executing) {
+                //  command();
+                //}
+                //else {
+                //  console.log("enqueue", index);
+                //  renderQueue.push(command);
+                //}
+              }
+              else {
+                console.log("what the efff");
+                console.log(index);
+                console.log(data);
+              }
+              //this.allChartData.push(ref.depths);
+            }
+
+            //const allPoints = keys
+            ////.sort(this.sorter.compare)
+            //.filter(function (key) {
+            //  if (filterRef(key))
+            //    return false
+            //  if (this.bam.readDepth[key].depths.length > 0)
+            //    return true
+            //}.bind(this))
+            //.map(function (key) {
+            //  return {
+            //    name: key,
+            //    data: this.bam.readDepth[key].depths,
+            //    sqLength: this.bam.readDepth[key].sqLength,
+            //  }
+            //}.bind(this));
+
+          },
+          function doneCallback() {
+
+          //this.chartData = this.allChartData;
+
+          const startTime = timeNowSeconds();
 
           const keys = Object.keys(this.bam.readDepth);
 
@@ -1118,12 +1250,17 @@
             .sort((a, b) => this.sorter.compare(a.name, b.name));
 
           this.readDepthData = allPoints;
+          //console.log("set it here");
+          //const blob = new Blob([JSON.stringify(this.readDepthData, null, 2)], {
+          //  type: 'text/plain;charset=utf-i'
+          //});
+          //saveAs(blob, "readDepthData.json");
 
           var start = region ? region.start : undefined;
           var end = region ? region.end : undefined;
 
           // turn off read depth loading msg
-          $("#readDepthLoadingMsg").css("display", "none");
+          //$("#readDepthLoadingMsg").css("display", "none");
           // Draw read depth chart
           this.draw = true;
 
@@ -1134,6 +1271,9 @@
             this.setSelectedSeq(region.chr, start, end);
 
           this.referenceDepthData = this.bam.referenceDepthData;
+
+          const fullTime = timeNowSeconds() - startTime;
+          //console.log(`Full time: ${fullTime}`);
 
         }.bind(this),
         (err) => {
@@ -1286,6 +1426,10 @@
 
   function timeNowSeconds() {
     return performance.now() / 1000;
+  }
+
+  function msUntil(time) {
+    return (time - timeNowSeconds()) * 1000;
   }
 
   function validSqName(key) {
