@@ -1205,7 +1205,8 @@ var barViewer = function() {
 
 		// Call big bar chart
 		var focalBar = bar()
-			.height( origHeight * sizeRatio )
+			//.height( origHeight * sizeRatio )
+			.height( origHeight )
 			.xValue( chart.xValue() )
 			.yValue( chart.yValue() )
 			.wValue( chart.wValue() )
@@ -1224,33 +1225,33 @@ var barViewer = function() {
 		focalBar(focalSelection, options);
 
     // Call little bar chart
-		var globalBar = bar()
-			.xValue( chart.xValue() )
-			.yValue( chart.yValue() )
-			.wValue( chart.wValue() )
-			.xAxis( chart.globalXAxis() )
-			.yAxis( null )
-			.margin( chart.margin() )
-			.width( chart.width() )
-			.transitionDuration( chart.transitionDuration() )
-			.id( chart.id() )
-			.color( chart.color() )
-			.tooltip( 'drag to zoom' )
-			.height( origHeight * (1-sizeRatio) )
-			.brush('brush', function() {
-				var x2 = globalBar.x(), brush = globalBar.brush();
-	        	var x = brush.empty() ? x2.domain() : brush.extent();
-	        	var datum = globalSelection.datum().filter(function(d,i) {
-	        		return (globalBar.xValue()(d,i) >= x[0] && globalBar.xValue()(d,i) <= x[1])
-	        	});
-	        	options.xMin = x[0];
-	        	options.xMax = x[1];
-	        	options.globalBar = globalBar;
-	           	focalBar( focalSelection.datum(datum), options );
-			});
+		//var globalBar = bar()
+		//	.xValue( chart.xValue() )
+		//	.yValue( chart.yValue() )
+		//	.wValue( chart.wValue() )
+		//	.xAxis( chart.globalXAxis() )
+		//	.yAxis( null )
+		//	.margin( chart.margin() )
+		//	.width( chart.width() )
+		//	.transitionDuration( chart.transitionDuration() )
+		//	.id( chart.id() )
+		//	.color( chart.color() )
+		//	.tooltip( 'drag to zoom' )
+		//	.height( origHeight * (1-sizeRatio) )
+		//	.brush('brush', function() {
+		//		var x2 = globalBar.x(), brush = globalBar.brush();
+	  //      	var x = brush.empty() ? x2.domain() : brush.extent();
+	  //      	var datum = globalSelection.datum().filter(function(d,i) {
+	  //      		return (globalBar.xValue()(d,i) >= x[0] && globalBar.xValue()(d,i) <= x[1])
+	  //      	});
+	  //      	options.xMin = x[0];
+	  //      	options.xMax = x[1];
+	  //      	options.globalBar = globalBar;
+	  //         	focalBar( focalSelection.datum(datum), options );
+		//	});
 
-		var globalSelection = selection.select('.iobio-bar-2').datum( selection.datum() )
-		globalBar(globalSelection, options);
+		//var globalSelection = selection.select('.iobio-bar-2').datum( selection.datum() )
+		//globalBar(globalSelection, options);
 
 
 		// // Add title on hover

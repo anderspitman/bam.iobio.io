@@ -116,12 +116,15 @@ export default {
     },
     mounted: function() {
 
+      console.log(this.width);
+
       this.histogramChart = iobio.viz.barViewer()
         .xValue(function(d) { return d[0]; })
         .yValue(function(d) { return d[1]; })
         .wValue(function() { return 1; })
         .height(this.height)
-        .width(this.width)
+        //.width(this.width)
+        //.width(100)
         .margin(this.margin)
         .sizeRatio(this.sizeRatio)
         .tooltip(this.tooltipFormatter);

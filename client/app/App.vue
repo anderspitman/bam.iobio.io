@@ -6,7 +6,7 @@
   @import url('https://fonts.googleapis.com/css?family=Muli');
 
   #main {
-    margin-top: 40px;
+    /*margin-top: 40px;*/
   }
 
   .welcome-modal-body {
@@ -17,6 +17,7 @@
 
 <template>
   <div id="app">
+    <!--
     <app-header></app-header>
     <help-modal v-if='showWelcomeModal' @close='modalClosed' modalTitle="Welcome to bam.iobio 2.0!">
       <div class='welcome-modal-body' slot='body'>
@@ -49,6 +50,7 @@
         </p>
       </div>
     </help-modal>
+    -->
     <div id='main'>
       <router-view></router-view>
     </div>

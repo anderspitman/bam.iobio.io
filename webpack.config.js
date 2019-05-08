@@ -13,7 +13,7 @@ module.exports = {
   },
   output: {
     path: __dirname + '/client/dist/',
-    publicPath: 'dist/',
+    publicPath: '/bog-demo/',
     filename: 'build.js'
   },
   module: {
