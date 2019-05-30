@@ -1,8 +1,12 @@
 // extending Thomas Down's original BAM js work
 
+import { Api } from 'iobio-client';
+
+
 var Bam = Class.extend({
 
    init: function(backendSource, bamUri, options) {
+      this.api = new Api();
       this.bamUri = bamUri;
       this.ssl = true;
       this.options = options; // *** add options mapper ***
@@ -29,32 +33,39 @@ var Bam = Class.extend({
       var regArr = regions.map(function(d) { return d.name+ ":"+ d.start + '-' + d.end;});
       var regStr = JSON.stringify(regions.map(function(d) { return {start:d.start,end:d.end,chr:d.name};}));
 
-      var args,
-      samtools_service;
-      if (this.baiUri) {
-        // explciity set bai url
-        samtools_service = this.iobio.od_samtools;
-        args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' '), '"'+this.baiUri+'"'];
-      } else {
-        samtools_service = this.iobio.od_samtools;
-        args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' ')];
-      }
-      var cmd = new iobio.cmd(
-            samtools_service,
-            args,
-            { ssl:this.ssl, 'urlparams': {'encoding':'binary'} }
-          )
+      console.log(regStr);
 
-      cmd = cmd.pipe(
-              this.iobio.bamstatsAlive,
-              ['-u', '500', '-k', '1', '-r', regStr],
-              { ssl:this.ssl}
-              // { ssl:this.ssl, urlparams: {cache:'stats.json', partialCache:true}}
-            );
+      //var args,
+      //samtools_service;
+      //if (this.baiUri) {
+      //  // explciity set bai url
+      //  samtools_service = this.iobio.od_samtools;
+      //  args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' '), '"'+this.baiUri+'"'];
+      //} else {
+      //  samtools_service = this.iobio.od_samtools;
+      //  args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' ')];
+      //}
+      //var cmd = new iobio.cmd(
+      //      samtools_service,
+      //      args,
+      //      { ssl:this.ssl, 'urlparams': {'encoding':'binary'} }
+      //    )
 
+      //cmd = cmd.pipe(
+      //        this.iobio.bamstatsAlive,
+      //        ['-u', '500', '-k', '1', '-r', regStr],
+      //        { ssl:this.ssl}
+      //        // { ssl:this.ssl, urlparams: {cache:'stats.json', partialCache:true}}
+      //      );
+
+      var cmd = this.api.call('bamstatsAlive', {
+        url: this.bamUri,
+        regions: regArr.join(' '),
+        regionStr: regStr,
+      });
 
       if (window.lastCmd) {
-        window.lastCmd.closeClient();
+        //window.lastCmd.closeClient();
       }
       window.lastCmd = cmd;
       return cmd;
@@ -154,7 +165,10 @@ var Bam = Class.extend({
 
       let currentSequence;
       const indexUrl = this.baiUri || this.getIndexUrl(this.bamUri);
-      var cmd = new iobio.cmd(this.iobio.bamReadDepther, [ '-i', '"' + indexUrl + '"'], {ssl:this.ssl,})
+      //var cmd = new iobio.cmd(this.iobio.bamReadDepther, [ '-i', '"' + indexUrl + '"'], {ssl:this.ssl,})
+      var cmd = this.api.call('bamReadDepther', {
+        url: indexUrl,
+      });
 
       cmd.on('error', (e) => {
         if (!this.hadError) {
@@ -198,6 +212,8 @@ var Bam = Class.extend({
       }.bind(me));
       cmd.on('end', function() {
 
+        console.log("readepth done");
+
         submitRef(currentSequence); 
         doneCallback();
 
@@ -221,7 +237,10 @@ var Bam = Class.extend({
        var me = this;
        var rawHeader = "";
 
-       const cmd = new iobio.cmd(this.iobio.od_samtools,['view', '-H', '"' + this.bamUri + '"'], {ssl:this.ssl});
+       //const cmd = new iobio.cmd(this.iobio.od_samtools,['view', '-H', '"' + this.bamUri + '"'], {ssl:this.ssl});
+       const cmd = this.api.call('getAlignmentHeader', {
+         url: this.bamUri,
+       });
 
        cmd.on('error', (error) => {
          // only show the alert on the first error
@@ -343,6 +362,7 @@ var Bam = Class.extend({
           })
 
           cmd.on('data', function (datas, options) {
+
             datas.split(';').forEach(function (data) {
               if (data == undefined || data == "\n") return;
               var success = true;
