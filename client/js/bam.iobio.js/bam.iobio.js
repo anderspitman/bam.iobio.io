@@ -1,5 +1,7 @@
 // extending Thomas Down's original BAM js work
 
+import { api as iobio } from 'iobio-client';
+
 var Bam = Class.extend({
 
    init: function(backendSource, bamUri, options) {
@@ -34,19 +36,19 @@ var Bam = Class.extend({
       if (this.baiUri) {
         // explciity set bai url
         samtools_service = this.iobio.od_samtools;
-        args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' '), '"'+this.baiUri+'"'];
+        args = ['view', '-b', this.bamUri].concat(regArr).concat[this.baiUri];
       } else {
         samtools_service = this.iobio.od_samtools;
-        args = ['view', '-b', '"'+this.bamUri+'"', regArr.join(' ')];
+        args = ['view', '-b', this.bamUri].concat(regArr);
       }
       var cmd = new iobio.cmd(
-            samtools_service,
+            'samtools',
             args,
             { ssl:this.ssl, 'urlparams': {'encoding':'binary'} }
           )
 
       cmd = cmd.pipe(
-              this.iobio.bamstatsAlive,
+              'bamstatsAlive',
               ['-u', '500', '-k', '1', '-r', regStr],
               { ssl:this.ssl}
               // { ssl:this.ssl, urlparams: {cache:'stats.json', partialCache:true}}
@@ -54,7 +56,7 @@ var Bam = Class.extend({
 
 
       if (window.lastCmd) {
-        window.lastCmd.closeClient();
+        //window.lastCmd.closeClient();
       }
       window.lastCmd = cmd;
       return cmd;
@@ -154,7 +156,8 @@ var Bam = Class.extend({
 
       let currentSequence;
       const indexUrl = this.baiUri || this.getIndexUrl(this.bamUri);
-      var cmd = new iobio.cmd(this.iobio.bamReadDepther, [ '-i', '"' + indexUrl + '"'], {ssl:this.ssl,})
+      var cmd = new iobio.cmd('curl', [indexUrl], {ssl:this.ssl, ignoreStderr: true})
+      cmd = cmd.pipe('bamReadDepther', {ssl:this.ssl,})
 
       cmd.on('error', (e) => {
         if (!this.hadError) {
@@ -221,7 +224,7 @@ var Bam = Class.extend({
        var me = this;
        var rawHeader = "";
 
-       const cmd = new iobio.cmd(this.iobio.od_samtools,['view', '-H', '"' + this.bamUri + '"'], {ssl:this.ssl});
+       const cmd = new iobio.cmd('samtools',['view', '-H', this.bamUri], {ssl:this.ssl});
 
        cmd.on('error', (error) => {
          // only show the alert on the first error
