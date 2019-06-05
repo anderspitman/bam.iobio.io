@@ -1,6 +1,6 @@
 // extending Thomas Down's original BAM js work
 
-import { api as iobio } from 'iobio-client';
+import { Api } from 'iobio-client';
 import EventEmitter from 'events';
 
 class LineReader extends EventEmitter {
@@ -58,7 +58,7 @@ var Bam = Class.extend({
          this.baiUri = this.options.bai;
 
       // set iobio servers
-      this.iobio = {}
+      this.iobio = new Api(backendSource);
 
       this.hadError = false;
 
@@ -80,7 +80,7 @@ var Bam = Class.extend({
         args = ['view', '-b', this.bamUri].concat(regArr);
       }
 
-      let cmd = new iobio.cmd('samtools', args);
+      let cmd = this.iobio.call('samtools', args);
       cmd = cmd.pipe('bamstatsAlive', ['-u', '500', '-k', '1', '-r', regStr]);
 
 
@@ -187,7 +187,7 @@ var Bam = Class.extend({
 
       let currentSequence;
       const indexUrl = this.baiUri || this.getIndexUrl(this.bamUri);
-      let cmd = new iobio.cmd('curl', [indexUrl], {ignoreStderr: true});
+      let cmd = this.iobio.call('curl', [indexUrl], {ignoreStderr: true});
       cmd = cmd.pipe('bamReadDepther');
 
       const lineReader = new LineReader(cmd);
@@ -253,7 +253,7 @@ var Bam = Class.extend({
        var me = this;
        var rawHeader = "";
 
-       const cmd = new iobio.cmd('samtools',['view', '-H', this.bamUri], {ssl:this.ssl});
+       const cmd = this.iobio.call('samtools',['view', '-H', this.bamUri], {ssl:this.ssl});
 
        cmd.on('error', (error) => {
          // only show the alert on the first error
