@@ -14,11 +14,6 @@ var Bam = Class.extend({
       // set iobio servers
       this.iobio = {}
 
-      this.iobio.samtools       = backendSource + "/samtools/";
-      this.iobio.od_samtools    = backendSource + "/od_samtools/";
-      this.iobio.bamReadDepther = backendSource + "/bamreaddepther/";
-      this.iobio.bamstatsAlive  = backendSource + "/bamstatsalive/";
-
       this.hadError = false;
 
       this._startFetchingHeader();
@@ -31,32 +26,22 @@ var Bam = Class.extend({
       var regArr = regions.map(function(d) { return d.name+ ":"+ d.start + '-' + d.end;});
       var regStr = JSON.stringify(regions.map(function(d) { return {start:d.start,end:d.end,chr:d.name};}));
 
-      var args,
-      samtools_service;
+      let args;
       if (this.baiUri) {
         // explciity set bai url
-        samtools_service = this.iobio.od_samtools;
         args = ['view', '-b', this.bamUri].concat(regArr).concat[this.baiUri];
       } else {
-        samtools_service = this.iobio.od_samtools;
         args = ['view', '-b', this.bamUri].concat(regArr);
       }
-      var cmd = new iobio.cmd(
-            'samtools',
-            args,
-            { ssl:this.ssl, 'urlparams': {'encoding':'binary'} }
-          )
 
-      cmd = cmd.pipe(
-              'bamstatsAlive',
-              ['-u', '500', '-k', '1', '-r', regStr],
-              { ssl:this.ssl}
-              // { ssl:this.ssl, urlparams: {cache:'stats.json', partialCache:true}}
-            );
+      let cmd = new iobio.cmd('samtools', args);
+      cmd = cmd.pipe('bamstatsAlive', ['-u', '500', '-k', '1', '-r', regStr]);
 
 
+      // TODO: is this still needed for the new backend? closeClient doesn't
+      // currently exist.
       if (window.lastCmd) {
-        //window.lastCmd.closeClient();
+        window.lastCmd.closeClient();
       }
       window.lastCmd = cmd;
       return cmd;
@@ -156,8 +141,8 @@ var Bam = Class.extend({
 
       let currentSequence;
       const indexUrl = this.baiUri || this.getIndexUrl(this.bamUri);
-      var cmd = new iobio.cmd('curl', [indexUrl], {ssl:this.ssl, ignoreStderr: true})
-      cmd = cmd.pipe('bamReadDepther', {ssl:this.ssl,})
+      let cmd = new iobio.cmd('curl', [indexUrl], {ignoreStderr: true});
+      cmd = cmd.pipe('bamReadDepther');
 
       cmd.on('error', (e) => {
         if (!this.hadError) {
