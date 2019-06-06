@@ -74,9 +74,10 @@ var Bam = Class.extend({
 
       let args;
       if (this.baiUri) {
-        // explciity set bai url
-        args = ['view', '-b', this.bamUri].concat(regArr).concat[this.baiUri];
-      } else {
+        // explicitly set bai url
+        args = ['view', '-b', this.bamUri].concat(regArr).concat([this.baiUri]);
+      }
+      else {
         args = ['view', '-b', this.bamUri].concat(regArr);
       }
 
