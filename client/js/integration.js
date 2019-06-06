@@ -27,7 +27,7 @@ class StandardIntegration extends Integration {
 
   buildParams() {
     return Object.assign({
-      backendSource: 'nv-prod.iobio.io',
+      backendSource: 'backend.iobio.io',
     }, this.query);
   }
 
