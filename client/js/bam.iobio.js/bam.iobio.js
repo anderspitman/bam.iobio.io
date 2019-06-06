@@ -189,7 +189,13 @@ var Bam = Class.extend({
       let currentSequence;
       const indexUrl = this.baiUri || this.getIndexUrl(this.bamUri);
       let cmd = this.iobio.call('curl', [indexUrl], {ignoreStderr: true});
-      cmd = cmd.pipe('bamReadDepther');
+
+      if (indexUrl.endsWith('.crai')) {
+        cmd = cmd.pipe('cramReadDepther');
+      }
+      else {
+        cmd = cmd.pipe('bamReadDepther');
+      }
 
       const lineReader = new LineReader(cmd);
 
