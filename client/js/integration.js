@@ -1,23 +1,28 @@
-export function createIntegration(query) {
-  if (query.source) {
-    return new MosaicIntegration(query);
+export function createIntegration(query, params) {
+
+  if (query.code && query.state) {
+    return new RemFSIntegration(query, params);
+  }
+  else if (query.source) {
+    return new MosaicIntegration(query, params);
   }
   else {
-    return new StandardIntegration(query);
+    return new StandardIntegration(query, params);
   }
 }
 
 
 class Integration {
-  constructor(query) {
+  constructor(query, params) {
 
     this.query = query;
+    this.params = params;
   }
 }
 
+
 class StandardIntegration extends Integration {
   init() {
-
     return new Promise((resolve, reject) => {
       this.alignmentURL = this.query.bam;
       this.alignmentIndexURL = this.query.bai;
@@ -28,7 +33,7 @@ class StandardIntegration extends Integration {
   buildParams() {
     return Object.assign({
       backendSource: 'backend.iobio.io',
-    }, this.query);
+    }, this.params);
   }
 
   buildQuery() {
@@ -38,6 +43,41 @@ class StandardIntegration extends Integration {
     }, this.query);
   }
 }
+
+
+class RemFSIntegration extends Integration {
+  init() {
+
+    return new Promise((resolve, reject) => {
+
+      window.remfsAuthClient.completeAuthorization()
+      .then(result => {
+
+        const driveUri = result.state;
+
+        const bamUrl  = driveUri + result.perms[0].path + '?access_token=' + result.accessToken;
+        const baiUrl  = driveUri + result.perms[1].path + '?access_token=' + result.accessToken;
+
+        this.alignmentURL = bamUrl;
+        this.alignmentIndexURL = baiUrl;
+        resolve();
+      });
+    });
+  }
+
+  buildParams() {
+    return Object.assign({
+      bam: this.alignmentURL,
+      bai: this.alignmentIndexURL,
+      backendSource: 'backend.iobio.io',
+    });
+  }
+
+  buildQuery() {
+    return {};
+  }
+}
+
 
 class MosaicIntegration extends Integration {
 

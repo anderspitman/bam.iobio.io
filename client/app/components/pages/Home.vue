@@ -91,8 +91,8 @@
   <div id="bodydiv">
 
     <div id="selectData">
-      <div style="width:700px; margin-left:auto; margin-right:auto; margin-top: 100px">
-        <div style="margin-left:auto;margin-right:auto;font-size: 28px; color: rgb(110,110,110); margin-bottom:70px; text-align: center;">
+      <div style="width:700px; margin-left:auto; margin-right:auto; margin-top: 60px">
+        <div style="margin-left:auto;margin-right:auto;font-size: 28px; color: rgb(110,110,110); margin-bottom:20px; text-align: center;">
           examine your sequence alignment file in seconds
         </div>
 

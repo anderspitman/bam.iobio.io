@@ -75,17 +75,17 @@
       }
       else {
 
-        this.integration = createIntegration(this.$route.query);
+        this.integration = createIntegration(this.$route.query, this.$route.params);
 
         this.integration.init().then(() => {
 
           const query = this.integration.buildQuery();
           const params = this.integration.buildParams();
 
-          // TODO: This is an ugly hack to force a re-route in Vue. If only the
+          // NOTE: This is an ugly hack to force a re-route in Vue. If only the
           // params change, re-route doesn't happen, so we have to manually
           // ensure the query changes.
-          query.forceReroute = true;
+          delete query['forceRoute'];
 
           this.$router.push({
             name: "alignment-page",
@@ -99,7 +99,9 @@
     methods: {
 
       launchedFromIntegration: function() {
-        return this.$route.query.source || this.$route.query.bam;
+        const oauth2Launch = this.$route.query.code && this.$route.query.state;
+
+        return this.$route.query.source || this.$route.query.bam || this.$route.params.bam || oauth2Launch;
       },
 
       onRegionChange: function(region) {

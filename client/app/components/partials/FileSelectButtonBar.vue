@@ -1,48 +1,36 @@
 <style type="text/css">
-  .file {
-    width: 300px;
-    text-align:center;
+
+  .file-select-button-bar {
+    width: 100%;
   }
-  .file-button{
+
+  .button-column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .file-button {
+    border: none;
     border-radius: 4px;
     width: 315px;
-    float:right;
     background: #2d8fc1;
-    padding: 20px 30px;
+    margin-top: 2rem;
+    padding: 1rem 2rem;
     color: #fff;
     font-size:24px;
     cursor: pointer;
     font-weight: 300;
+    text-align: center;
   }
-  .inverted-file-button{
-    border: 0;
-    outline: none;
-    width: 365px;
-    background: none;
-    padding: 20px 30px;
-    color: #2d8fc1;
-    font-size:24px;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 300;
+  .file-input {
+    visibility: hidden;
   }
-  .inverted-file-button:active, .inverted-file-button:focus {
-    outline: none;
-    border: 0;
-  }
-  .file label {
-    float:left;
-  }
-  .file input {
-    position: absolute;
-    display: inline-block;
-    left: 0;
-    top: 0;
-    opacity: 0.01;
-    visibility:hidden;
-    cursor: pointer;
-  }
+
   .arrow_box {
+    margin-top:20px;
+    width:500px;
     position: relative;
     background: #ffffff;
     border: 2px solid #2d8fc1;
@@ -61,43 +49,45 @@
     border-color: rgba(255, 255, 255, 0);
     border-bottom-color: #ffffff;
     border-width: 20px;
-    left: 78%;
+    left: 50%;
     margin-left: -20px;
   }
   .arrow_box:before {
     border-color: rgba(45, 143, 193, 0);
     border-bottom-color: #2d8fc1;
     border-width: 23px;
-    left: 78%;
+    left: 50%;
     margin-left: -23px;
   }
   .arrow_box input {
-    width:610px;
+    width: 412px;
     margin: 8px;
     color: #2d8fc1;
-    font:300 30px quicksand;
+    font: 300 22px quicksand;
   }
   .arrow_box button { font:300 28px quicksand;}
 
 </style>
 
 <template>
-  <div>
-    <div class="file" @click="showUrl=false">
-      <input type="file" name="files[]" id="file"  multiple @change="processBamFile" />
-      <label class="file-button" for="file" >local bam/cram file</label>
-    </div>
-    <div class="file-button" style="text-align:center" @click="displayBamUrlBox()">remote bam/cram url</div>
-    <div style="clear:both"></div>
-    <div v-if="showUrl" id='bam-url' style="margin-top:18px;width:700px;margin-left:auto;margin-right:auto" class="arrow_box">
-      <input id="url-input" placeholder="BAM/CRAM URL" v-model="selectedBamURL"></input>
-      <input id="bai-url-input" placeholder="BAI/CRAI URL (optional)" v-model="selectedBaiURL"></input>
-      <button id="bam-url-go-button" @click="openBamURL">
-          Go
-      </button>
-    </div>
-    <div style="text-align: center;">
-      <button class="inverted-file-button" @click="launchDemoData" >launch with demo data</button>
+  <div class='file-select-button-bar'>
+    <div class='button-column'>
+      <button class="file-button" @click="launchDemoData" >launch with demo data</button>
+      <div class="file" @click="showUrl=false">
+        <input type="file" name="files[]" id="file"  multiple @change="processBamFile" />
+        <label class="file-button" for="file" >local bam/cram file</label>
+      </div>
+      <button class="file-button" @click="displayBamUrlBox()">remote bam/cram url</button>
+      <div v-if="showUrl" id='bam-url' class="arrow_box">
+        <input id="url-input" placeholder="BAM/CRAM URL" v-model="selectedBamURL"></input>
+        <input id="bai-url-input" placeholder="BAI/CRAI URL (optional)" v-model="selectedBaiURL"></input>
+        <button id="bam-url-go-button" @click="openBamURL">Go</button>
+      </div>
+      <button class="file-button" @click="displayGemDriveBox()">load from GemDrive</button>
+      <div v-if="showGemDriveBox" class="arrow_box">
+        <input id="gemdrive-input" placeholder="GemDrive address" v-model="gemDriveUri"></input>
+        <button id="gemdrive-go-button" @click="launchGemDrive()">Go</button>
+      </div>
     </div>
   </div>
 </template>
@@ -112,15 +102,22 @@ export default {
     return {
       selectedBamURL: '',
       selectedBaiURL: '',
+      gemDriveUri: localStorage.getItem('gemDriveUri'),
       showUrl: false,
+      showGemDriveBox: false,
       demoFileURL: 'http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam',
     }
   },
   methods: {
 
-    displayBamUrlBox : function() {
+    displayBamUrlBox: function() {
+      this.showGemDriveBox = false;
       this.showUrl = true;
-      $("#bam-url").children("input").focus();
+    },
+
+    displayGemDriveBox: function() {
+      this.showUrl = false;
+      this.showGemDriveBox = true;
     },
 
     launchDemoData : function () {
@@ -129,6 +126,36 @@ export default {
         query: Object.assign({
           bam: this.demoFileURL
         }, this.$route.query),
+      });
+    },
+
+    launchGemDrive: function() {
+      if (this.gemDriveUri.length === 0) {
+        alert('Please enter a valid GemDrive address');
+        return;
+      }
+
+      localStorage.setItem('gemDriveUri', this.gemDriveUri);
+
+      const driveUri = this.gemDriveUri.startsWith('http') ? this.gemDriveUri : 'https://' + this.gemDriveUri;
+      window.remfsAuthClient.authorize({
+        driveUri,
+        redirectUri: window.location.origin + '/',
+        perms: [
+          {
+            type: 'file',
+            perm: 'read',
+            //path: '/genome/small.bam',
+            hint: "BAM file",
+          },
+          {
+            type: 'file',
+            perm: 'read',
+            //path: '/genome/small.bam.bai',
+            hint: "BAM index file (*.bai)",
+          },
+        ],
+        state: driveUri,
       });
     },
 
@@ -141,7 +168,11 @@ export default {
         name: 'alignment-page',
         query: Object.assign({
           bam: this.selectedBamURL,
-          bai: this.selectedBaiURL
+          bai: this.selectedBaiURL,
+          // NOTE: This is an ugly hack to force a re-route in Vue. If only the
+          // params change, re-route doesn't happen, so we have to manually
+          // ensure the query changes.
+          forceRoute: true,
         }, this.$route.query),
       });
     },
@@ -193,10 +224,10 @@ export default {
 
         self.$router.push({
           name: 'alignment-page',
-          query: Object.assign({
+          params: {
             bam: this.selectedBamURL,
-            bai: this.selectedBaiURL
-          }, this.$route.query),
+            bai: this.selectedBaiURL,
+          },
         });
       });
     }
