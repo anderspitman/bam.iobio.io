@@ -138,7 +138,7 @@ export default {
       localStorage.setItem('gemDriveUri', this.gemDriveUri);
 
       const driveUri = this.gemDriveUri.startsWith('http') ? this.gemDriveUri : 'https://' + this.gemDriveUri;
-      window.remfsAuthClient.authorize({
+      window.gemdriveAuthClient.authorize({
         driveUri,
         redirectUri: window.location.origin + '/',
         perms: [

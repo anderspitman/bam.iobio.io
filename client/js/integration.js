@@ -1,7 +1,7 @@
 export function createIntegration(query, params) {
 
   if (query.code && query.state) {
-    return new RemFSIntegration(query, params);
+    return new GemDriveIntegration(query, params);
   }
   else if (query.source) {
     return new MosaicIntegration(query, params);
@@ -45,12 +45,12 @@ class StandardIntegration extends Integration {
 }
 
 
-class RemFSIntegration extends Integration {
+class GemDriveIntegration extends Integration {
   init() {
 
     return new Promise((resolve, reject) => {
 
-      window.remfsAuthClient.completeAuthorization()
+      window.gemdriveAuthClient.completeAuthorization()
       .then(result => {
 
         const driveUri = result.state;
